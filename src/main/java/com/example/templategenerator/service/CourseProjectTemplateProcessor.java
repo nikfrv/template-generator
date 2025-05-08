@@ -1,6 +1,6 @@
 package com.example.templategenerator.service;
 
-import com.example.templategenerator.model.Item;
+import com.example.templategenerator.model.*;
 import fr.opensagres.xdocreport.core.XDocReportException;
 import fr.opensagres.xdocreport.document.IXDocReport;
 import fr.opensagres.xdocreport.template.IContext;
@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 
 @Service("courseProject")
 public class CourseProjectTemplateProcessor extends BaseTemplateProcessor {
@@ -17,34 +18,32 @@ public class CourseProjectTemplateProcessor extends BaseTemplateProcessor {
     @Override
     public byte[] processTemplate(String templateName, Map<String, Object> data) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
+
             IXDocReport report = loadReport(templateName);
+
+
             FieldsMetadata metadata = report.createFieldsMetadata();
+            metadata.load("content", Content.class, true);
+            metadata.load("graphic", GraphicMaterial.class, true);
+            metadata.load("consultants", Consultant.class, true);
+            metadata.load("projectStage", ProjectStage.class, true);
+            metadata.load("items", Item.class, true);
+
             IContext context = report.createContext();
 
-            // items
-            Object itemsRaw = data.get("items");
-            if (itemsRaw instanceof List<?> rawList) {
-                List<Item> items = new ArrayList<>();
-                for (Object obj : rawList) {
-                    if (obj instanceof Map<?, ?> map) {
-                        Item item = new Item();
-                        item.setName(String.valueOf(map.get("name")));
-                        item.setValue(String.valueOf(map.get("value")));
-                        items.add(item);
-                    }
-                }
-                metadata.addFieldAsList("items");
-                context.put("items", items);
-            }
+            handleItems(context, data);
 
-            // Многострочные поля
-            handleMultilineFields(context, data, "content", "graphicMaterials", "consultants", "projectStages");
+            handleMultilineAsValueObjects(context, data, Map.of(
+                    "content", Content::new,
+                    "graphic", GraphicMaterial::new,
+                    "consultants", Consultant::new,
+                    "projectStage", ProjectStage::new
+            ));
 
-            // Прочие простые поля
-            Set<String> skipKeys = Set.of("items", "content", "graphicMaterials", "consultants", "projectStages");
-            Map<String, Object> remaining = new HashMap<>(data);
-            skipKeys.forEach(remaining::remove);
-            putSimpleFields(context, remaining);
+            // Добавляем остальные поля как простые
+            Map<String, Object> filteredData = new HashMap<>(data);
+            List.of("content", "graphic", "consultants", "projectStage").forEach(filteredData::remove);
+            putSimpleFields(context, filteredData);
 
             report.process(context, out);
             return out.toByteArray();
@@ -54,13 +53,40 @@ public class CourseProjectTemplateProcessor extends BaseTemplateProcessor {
         }
     }
 
-    protected void handleMultilineFields(IContext context, Map<String, Object> data, String... keys) {
-        for (String key : keys) {
-            Object val = data.get(key);
-            if (val instanceof String str) {
-                // Для корректного переноса строк
-                context.put(key, str.replace("\n", "</w:t><w:br/><w:t>"));
+    protected <T> void handleMultilineAsValueObjects(
+            IContext context,
+            Map<String, Object> data,
+            Map<String, Function<String, T>> keyToConstructor
+    ) {
+        for (Map.Entry<String, Function<String, T>> entry : keyToConstructor.entrySet()) {
+            String key = entry.getKey();
+            Object raw = data.get(key);
+            if (raw instanceof String rawString) {
+                String correctedStr = rawString.replace("\\n", "\n");
+                List<T> values = Arrays.stream(correctedStr.split("\\R"))
+                        .map(String::trim)
+                        .filter(line -> !line.isEmpty())
+                        .map(entry.getValue())
+                        .toList();
+
+                context.put(key, values);
             }
+        }
+    }
+
+    protected void handleItems(IContext context, Map<String, Object> data) {
+        Object raw = data.get("items");
+        if (raw instanceof List<?> rawList) {
+            List<Item> items = new ArrayList<>();
+            for (Object obj : rawList) {
+                if (obj instanceof Map<?, ?> map) {
+                    Item item = new Item();
+                    item.setName(String.valueOf(map.get("name")));
+                    item.setValue(String.valueOf(map.get("value")));
+                    items.add(item);
+                }
+            }
+            context.put("items", items);
         }
     }
 }

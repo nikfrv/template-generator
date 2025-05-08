@@ -29,6 +29,8 @@ dependencies {
 	implementation 'fr.opensagres.xdocreport:xdocreport:2.1.0'
 	implementation 'org.freemarker:freemarker:2.3.34'
 	implementation 'org.apache.velocity:velocity-engine-core:2.4.1'
+	implementation 'org.slf4j:slf4j-api:2.0.17'
+	testImplementation 'org.slf4j:slf4j-simple:2.0.17'
 	compileOnly 'org.projectlombok:lombok'
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
 	annotationProcessor 'org.projectlombok:lombok'
