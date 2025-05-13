@@ -1,5 +1,7 @@
 package com.example.templategenerator.service;
 
+import com.example.templategenerator.model.Student;
+import com.example.templategenerator.model.Topic;
 import fr.opensagres.xdocreport.core.XDocReportException;
 import fr.opensagres.xdocreport.document.IXDocReport;
 import fr.opensagres.xdocreport.document.registry.XDocReportRegistry;
@@ -24,14 +26,18 @@ public abstract class BaseTemplateProcessor implements TemplateProcessor {
         }
     }
 
+    protected void putKnownObjects(IContext context, Map<String, Object> data) {
+        if (data.get("student") instanceof Student student) {
+            context.put("student", student);
+        }
+        if (data.get("topic") instanceof Topic topic) {
+            context.put("topic", topic);
+        }
+    }
+
+
     protected IXDocReport loadReport(String templateName) throws IOException, XDocReportException {
         InputStream templateStream = new ClassPathResource("templates/" + templateName).getInputStream();
         return XDocReportRegistry.getRegistry().loadReport(templateStream, TemplateEngineKind.Freemarker);
-    }
-
-    protected void closeQuietly(InputStream is) {
-        try {
-            if (is != null) is.close();
-        } catch (IOException ignored) {}
     }
 }
