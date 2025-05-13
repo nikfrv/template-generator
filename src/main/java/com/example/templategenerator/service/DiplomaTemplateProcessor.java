@@ -17,6 +17,7 @@ public class DiplomaTemplateProcessor extends BaseTemplateProcessor {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
             IXDocReport report = loadReport(templateName);
             IContext context = report.createContext();
+            putKnownObjects(context, data);
             putSimpleFields(context, data);
             report.process(context, out);
             return out.toByteArray();

@@ -30,6 +30,8 @@ public class CourseWorkTemplateProcessor extends CourseProjectTemplateProcessor 
 
             IContext context = report.createContext();
 
+            putKnownObjects(context, data);
+
             handleItems(context, data);
 
             handleMultilineAsValueObjects(context, data, Map.of(
