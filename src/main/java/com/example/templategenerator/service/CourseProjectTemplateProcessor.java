@@ -27,13 +27,11 @@ public class CourseProjectTemplateProcessor extends BaseTemplateProcessor {
             metadata.load("graphic", GraphicMaterial.class, true);
             metadata.load("consultants", Consultant.class, true);
             metadata.load("projectStage", ProjectStage.class, true);
-            metadata.load("items", Item.class, true);
+            metadata.load("topic.items", Item.class, true);
 
             IContext context = report.createContext();
 
             putKnownObjects(context, data);
-
-            handleItems(context, data);
 
             handleMultilineAsValueObjects(context, data, Map.of(
                     "content", Content::new,
@@ -76,19 +74,4 @@ public class CourseProjectTemplateProcessor extends BaseTemplateProcessor {
         }
     }
 
-    protected void handleItems(IContext context, Map<String, Object> data) {
-        Object raw = data.get("items");
-        if (raw instanceof List<?> rawList) {
-            List<Item> items = new ArrayList<>();
-            for (Object obj : rawList) {
-                if (obj instanceof Map<?, ?> map) {
-                    Item item = new Item();
-                    item.setName(String.valueOf(map.get("name")));
-                    item.setValue(String.valueOf(map.get("value")));
-                    items.add(item);
-                }
-            }
-            context.put("items", items);
-        }
-    }
 }

@@ -26,14 +26,14 @@ public abstract class BaseTemplateProcessor implements TemplateProcessor {
         }
     }
 
-    protected void putKnownObjects(IContext context, Map<String, Object> data) {
-        if (data.get("student") instanceof Student student) {
-            context.put("student", student);
+        protected void putKnownObjects(IContext context, Map<String, Object> data) {
+            if (data.get("student") instanceof Student student) {
+                context.put("student", student);
+            }
+            if (data.get("topic") instanceof Topic topic) {
+                context.put("topic", topic);
+            }
         }
-        if (data.get("topic") instanceof Topic topic) {
-            context.put("topic", topic);
-        }
-    }
 
 
     protected IXDocReport loadReport(String templateName) throws IOException, XDocReportException {

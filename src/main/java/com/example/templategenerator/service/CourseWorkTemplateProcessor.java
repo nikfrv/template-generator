@@ -26,13 +26,11 @@ public class CourseWorkTemplateProcessor extends CourseProjectTemplateProcessor 
             metadata.load("content", Content.class, true);
             metadata.load("consultants", Consultant.class, true);
             metadata.load("projectStage", ProjectStage.class, true);
-            metadata.load("items", Item.class, true);
+            metadata.load("topic.items", Item.class, true);
 
             IContext context = report.createContext();
 
             putKnownObjects(context, data);
-
-            handleItems(context, data);
 
             handleMultilineAsValueObjects(context, data, Map.of(
                     "content", Content::new,
