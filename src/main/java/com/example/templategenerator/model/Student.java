@@ -8,6 +8,6 @@ import lombok.*;
 @NoArgsConstructor
 @ToString
 public class Student {
-    private String name;
     private String group;
+    private String fullName;
 }
