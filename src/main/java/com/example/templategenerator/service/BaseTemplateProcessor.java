@@ -36,8 +36,8 @@ public abstract class BaseTemplateProcessor implements TemplateProcessor {
         }
 
 
-    protected IXDocReport loadReport(String templateName) throws IOException, XDocReportException {
-        InputStream templateStream = new ClassPathResource("templates/" + templateName).getInputStream();
+    protected IXDocReport loadReport(String fileName) throws IOException, XDocReportException {
+        InputStream templateStream = new ClassPathResource("templates/" + fileName).getInputStream();
         return XDocReportRegistry.getRegistry().loadReport(templateStream, TemplateEngineKind.Freemarker);
     }
 }

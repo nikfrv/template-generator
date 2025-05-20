@@ -13,9 +13,9 @@ import java.util.Map;
 public class DiplomaTemplateProcessor extends BaseTemplateProcessor {
 
     @Override
-    public byte[] processTemplate(String templateName, Map<String, Object> data) {
+    public byte[] processTemplate(String fileName, Map<String, Object> data) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
-            IXDocReport report = loadReport(templateName);
+            IXDocReport report = loadReport(fileName);
             IContext context = report.createContext();
             putKnownObjects(context, data);
             putSimpleFields(context, data);

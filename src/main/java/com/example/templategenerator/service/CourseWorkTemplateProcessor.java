@@ -16,10 +16,10 @@ import java.util.Map;
 @Service("courseWork")
 public class CourseWorkTemplateProcessor extends CourseProjectTemplateProcessor {
     @Override
-    public byte[] processTemplate(String templateName, Map<String, Object> data) {
+    public byte[] processTemplate(String fileName, Map<String, Object> data) {
         try (ByteArrayOutputStream out = new ByteArrayOutputStream()) {
 
-            IXDocReport report = loadReport(templateName);
+            IXDocReport report = loadReport(fileName);
 
 
             FieldsMetadata metadata = report.createFieldsMetadata();
