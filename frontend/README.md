@@ -1,46 +1,78 @@
-# Getting Started with Create React App
+# Руководство пользователя: Генератор заданий
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+Это веб-приложение для автоматизации генерации заданий (курсовых, дипломных и др.) на основе Excel-файлов и шаблонов Word.
 
-## Available Scripts
+---
 
-In the project directory, you can run:
+## Быстрый старт
 
-### `npm start`
+1. **Запуск в режиме разработки**
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+   В каталоге `frontend` выполните:
+   ```bash
+   npm install
+   npm start
+   ```
+   Откройте [http://localhost:3000](http://localhost:3000) в браузере.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+2. **Сборка для продакшена**
 
-### `npm test`
+   ```bash
+   npm run build
+   ```
+   Готовые файлы появятся в папке `build/`.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+---
 
-### `npm run build`
+## Как пользоваться приложением
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. **Выбор типа задания**
+   - На главной странице выберите тип задания:  
+     _Курсовой проект_, _Курсовая работа_ или _Дипломный проект_.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+2. **Загрузка Excel-файла**
+   - Загрузите Excel-файл с данными студентов и тем.
+   - При необходимости отметьте опцию перемешивания тем.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+3. **Заполнение общих полей**
+   - Введите необходимые данные: дату, номер приказа, сроки, консультантов, календарный график и др.
+   - Для некоторых полей (например, календарного графика) можно вводить несколько строк — каждая строка будет отдельным пунктом.
 
-### `npm run eject`
+4. **Генерация документа**
+   - Нажмите кнопку "Сгенерировать задания".
+   - После обработки автоматически начнётся скачивание готового Word-документа.
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+---
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Переменные окружения
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Для подключения к бэкенду используйте файл `.env` в папке `frontend`:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```env
+REACT_APP_API_BASE_URL=http://localhost:8080/api
+```
 
-## Learn More
+---
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+## Основные команды
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- `npm start` — запуск в режиме разработки
+- `npm run build` — сборка для продакшена
+- `npm test` — запуск тестов
+
+---
+
+## Технические детали
+
+- **Фреймворк:** React + TypeScript
+- **Стили:** Tailwind CSS
+- **Сборка:** Create React App
+- **Docker:** поддерживается запуск через Docker Compose
+
+---
+
+## Вопросы и поддержка
+
+Если у вас возникли вопросы или проблемы с приложением, обратитесь к разработчику или создайте issue в репозитории.
+
+---
