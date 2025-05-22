@@ -1,0 +1,14 @@
+FROM openjdk:21-jdk-slim
+
+ENV GRADLE_USER_HOME=/home/gradle/.gradle
+
+WORKDIR /app
+
+COPY . .
+
+RUN chmod +x ./gradlew
+RUN ./gradlew build -x test --no-daemon
+
+EXPOSE 8080
+
+CMD ["./gradlew", "bootRun", "--no-daemon"]

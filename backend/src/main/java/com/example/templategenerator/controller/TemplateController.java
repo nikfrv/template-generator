@@ -1,0 +1,98 @@
+package com.example.templategenerator.controller;
+
+import com.example.templategenerator.model.AssignmentGenerationRequest;
+import com.example.templategenerator.model.TemplateType;
+import com.example.templategenerator.parser.XlsxStudentsAndTopicsParser;
+import com.example.templategenerator.service.AssignmentDocumentGenerator;
+import com.example.templategenerator.service.TemplateProcessorFactory;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.Map;
+
+@RestController
+@RequestMapping("/api/templates")
+@RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000")
+public class TemplateController {
+
+    private final TemplateProcessorFactory templateProcessorFactory;
+    private final AssignmentDocumentGenerator assignmentDocumentGenerator;
+    private final XlsxStudentsAndTopicsParser excelParser;
+    private final ObjectMapper objectMapper;
+
+    @PostMapping("/generate")
+    public ResponseEntity<byte[]> generateTemplate(
+            @RequestParam TemplateType type,
+            @RequestParam String fileName,
+            @RequestBody Map<String, Object> data) {
+
+        var processor = templateProcessorFactory.getProcessor(type);
+        byte[] document = processor.processTemplate(fileName, data);
+
+        return buildResponse(document, fileName);
+    }
+
+    @PostMapping("/generate/bulk")
+    public ResponseEntity<byte[]> generateBulkFromJson(@RequestBody AssignmentGenerationRequest request) {
+        byte[] document = assignmentDocumentGenerator.generateMergedDocument(
+                request.getExcelData().getStudents(),
+                request.getExcelData().getTopics(),
+                request.getTemplateType(),
+                request.getFileName(),
+                request.isShuffleTopics(),
+                request.getCommonFields()
+        );
+        return buildResponse(document, "assignments.docx");
+    }
+
+    @PostMapping(value = "/generate/from-excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<byte[]> generateFromExcel(
+            @RequestParam TemplateType type,
+            @RequestParam String fileName,
+            @RequestParam(defaultValue = "false") boolean shuffleTopics,
+            @RequestPart MultipartFile excelFile,
+            @RequestPart(required = false) String commonFields
+    ) throws IOException {
+
+        Map<String, Object> commonFieldsMap = (Map<String, Object>) (Map<?, ?>)
+                objectMapper.readValue(commonFields, new TypeReference<Map<String, Object>>() {});
+
+        File tempFile = File.createTempFile("excel", ".xlsx");
+        excelFile.transferTo(tempFile);
+
+        var parsed = excelParser.parse(tempFile, type);
+
+        byte[] document = assignmentDocumentGenerator.generateMergedDocument(
+                parsed.getStudents(),
+                parsed.getTopics(),
+                type,
+                fileName,
+                shuffleTopics,
+                commonFieldsMap
+        );
+
+        if (!tempFile.delete()) {
+            System.err.println("Warning: Failed to delete temp file: " + tempFile.getAbsolutePath());
+        }
+
+        return buildResponse(document, type + "_assignments.docx");
+    }
+
+    private ResponseEntity<byte[]> buildResponse(byte[] document, String filename) {
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+                .contentType(MediaType.parseMediaType(
+                        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
+                .body(document);
+    }
+}
+
