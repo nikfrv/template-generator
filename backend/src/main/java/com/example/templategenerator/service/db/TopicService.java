@@ -29,18 +29,21 @@ public class TopicService {
     }
 
     public void saveAllIfNotExists(List<Topic> topics) {
-        if (topics.isEmpty()) return;
+        if (topics.isEmpty())
+            return;
 
         List<TopicEntity> toSave = topics.stream()
                 .filter(topic -> topicRepository.findByTitleAndType(
                         topic.getTitle(),
-                        topic.getType()
-                ).isEmpty())
+                        topic.getType()).isEmpty())
                 .map(topicMapper::toEntity)
                 .toList();
 
         topicRepository.saveAll(toSave);
     }
+
+    public boolean existsByTitleAndTypeSince(String title, TemplateType type, int yearsBack) {
+        LocalDate dateAfter = LocalDate.now().minusYears(yearsBack);
+        return topicRepository.existsByTitleAndTypeAndTopicDateAfter(title, type, dateAfter);
+    }
 }
-
-

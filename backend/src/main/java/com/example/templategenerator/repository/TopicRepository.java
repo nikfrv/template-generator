@@ -10,4 +10,5 @@ import java.util.List;
 public interface TopicRepository extends JpaRepository<TopicEntity, Long> {
     List<TopicEntity> findByTitleAndTypeAndTopicDate(String title, TemplateType type, LocalDate topicDate);
     List<TopicEntity> findByTitleAndType(String title, TemplateType type);
+    boolean existsByTitleAndTypeAndTopicDateAfter(String title, TemplateType type, LocalDate dateAfter);
 }

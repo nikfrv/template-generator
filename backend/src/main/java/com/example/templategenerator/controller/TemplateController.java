@@ -1,5 +1,6 @@
 package com.example.templategenerator.controller;
 
+import com.example.templategenerator.model.domain.Topic;
 import com.example.templategenerator.model.dto.assignment.AssignmentGenerationRequest;
 import com.example.templategenerator.model.domain.TemplateType;
 import com.example.templategenerator.parser.XlsxStudentsAndTopicsParser;
@@ -18,6 +19,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -113,5 +115,28 @@ public class TemplateController {
         }
 
         return ResponseEntity.ok("Data loaded to database.");
+    }
+
+    @PostMapping(value = "/check-duplicates", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> checkDuplicates(
+            @RequestParam TemplateType type,
+            @RequestPart MultipartFile excelFile) throws IOException {
+        File tempFile = File.createTempFile("excel", ".xlsx");
+        excelFile.transferTo(tempFile);
+
+        var parsed = excelParser.parse(tempFile, type);
+        List<String> titles = parsed.getTopics().stream()
+                .map(Topic::getTitle)
+                .toList();
+
+        List<String> duplicates = titles.stream()
+                .filter(title -> topicService.existsByTitleAndTypeSince(title, type, 5))
+                .toList();
+
+        if (!tempFile.delete()) {
+            System.err.println("Warning: Failed to delete temp file: " + tempFile.getAbsolutePath());
+        }
+
+        return ResponseEntity.ok(Map.of("duplicates", duplicates));
     }
 }

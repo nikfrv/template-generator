@@ -6,7 +6,7 @@ interface UploadExcelPageProps {
   onBack: () => void;
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const UploadExcelPage: React.FC<UploadExcelPageProps> = ({ onNext, onBack }) => {
   const [file, setFile] = useState<File | null>(null);
@@ -14,6 +14,9 @@ const UploadExcelPage: React.FC<UploadExcelPageProps> = ({ onNext, onBack }) => 
   const [error, setError] = useState<string | null>(null);
   const [shuffle, setShuffle] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [duplicates, setDuplicates] = useState<string[]>([]);
+  const [showDuplicates, setShowDuplicates] = useState(false);
+  const [pendingUpload, setPendingUpload] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,14 +69,53 @@ const UploadExcelPage: React.FC<UploadExcelPageProps> = ({ onNext, onBack }) => 
     if (!file) return;
     setLoading(true);
     setError(null);
+    setDuplicates([]);
+    setShowDuplicates(false);
+    setPendingUpload(false);
+
     try {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Требуется авторизация");
-
-      const formData = new FormData();
       const templateType = localStorage.getItem("selectedType");
       if (!templateType) throw new Error("Не выбран тип задания");
-      formData.append("type", templateType);
+
+      const checkFormData = new FormData();
+      checkFormData.append("type", templateType);
+      checkFormData.append("excelFile", file);
+
+      const checkResp = await fetch(`${API_BASE_URL}/templates/check-duplicates`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: checkFormData,
+      });
+      const checkData = await checkResp.json();
+      if (checkData.duplicates && checkData.duplicates.length > 0) {
+        setDuplicates(checkData.duplicates);
+        setShowDuplicates(true);
+        setPendingUpload(true); 
+        return;
+      }
+
+      await uploadExcel();
+    } catch (e: any) {
+      setError(e.message || "Ошибка загрузки Excel");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const uploadExcel = async () => {
+    if (!file) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const token = localStorage.getItem("token");
+      const templateType = localStorage.getItem("selectedType");
+      const formData = new FormData();
+      formData.append("type", templateType!);
       formData.append("excelFile", file);
 
       const response = await fetch(`${API_BASE_URL}/templates/upload/excel`, {
@@ -102,8 +144,42 @@ const UploadExcelPage: React.FC<UploadExcelPageProps> = ({ onNext, onBack }) => 
       setError(e.message || "Ошибка загрузки Excel");
     } finally {
       setLoading(false);
+      setShowDuplicates(false);
+      setDuplicates([]);
+      setPendingUpload(false);
     }
   };
+
+  const DuplicatesModal = () => (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+      <div className="bg-white rounded-xl p-6 max-w-lg w-full shadow-lg max-h-[80vh] overflow-y-auto">
+        <h3 className="text-lg font-bold mb-2 text-red-700">Внимание!</h3>
+        <div className="mb-2">Следующие темы уже были за последние 5 лет:</div>
+        <ul className="mb-4 max-h-60 overflow-y-auto pr-2">
+          {duplicates.map(t => <li key={t} className="text-red-700">- {t}</li>)}
+        </ul>
+        <div className="flex gap-4 justify-end">
+          <button
+            onClick={() => {
+              setShowDuplicates(false);
+              setDuplicates([]);
+              setPendingUpload(false);
+            }}
+            className="px-4 py-2 rounded bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100"
+          >
+            Вернуться к загрузке файла
+          </button>
+          <button
+            onClick={uploadExcel}
+            className="px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700"
+            disabled={loading}
+          >
+            Продолжить
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="flex flex-col items-center justify-center bg-white p-8 rounded-2xl shadow-md w-full max-w-xl">
@@ -135,7 +211,8 @@ const UploadExcelPage: React.FC<UploadExcelPageProps> = ({ onNext, onBack }) => 
             Перетащите файл сюда или{" "}
             <span className="text-blue-600 underline">выберите</span>
           </span>
-        )}
+        )
+        }
       </div>
 
       {error && <div className="text-red-600 mb-2">{error}</div>}
@@ -175,6 +252,8 @@ const UploadExcelPage: React.FC<UploadExcelPageProps> = ({ onNext, onBack }) => 
           {loading ? "Загрузка..." : "Распределить темы"}
         </button>
       </div>
+
+      {showDuplicates && <DuplicatesModal />}
     </div>
   );
 };
