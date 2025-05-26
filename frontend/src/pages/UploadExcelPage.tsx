@@ -1,17 +1,19 @@
 import React, { useState, useRef } from "react";
+import { API_BASE_URL } from "../api/config";
 
 interface UploadExcelPageProps {
   onNext: (file: File, shuffle: boolean) => void;
   onBack: () => void;
 }
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const MAX_FILE_SIZE = 5 * 1024 * 1024; 
 
 const UploadExcelPage: React.FC<UploadExcelPageProps> = ({ onNext, onBack }) => {
   const [file, setFile] = useState<File | null>(null);
   const [dragActive, setDragActive] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [shuffle, setShuffle] = useState(false);
+  const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -60,9 +62,46 @@ const UploadExcelPage: React.FC<UploadExcelPageProps> = ({ onNext, onBack }) => 
     inputRef.current?.click();
   };
 
-  const handleSubmit = () => {
-    if (file) {
+  const handleSubmit = async () => {
+    if (!file) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Требуется авторизация");
+
+      const formData = new FormData();
+      const templateType = localStorage.getItem("selectedType");
+      if (!templateType) throw new Error("Не выбран тип задания");
+      formData.append("type", templateType);
+      formData.append("excelFile", file);
+
+      const response = await fetch(`${API_BASE_URL}/templates/upload/excel`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (response.status === 401) {
+        setError("Сессия истекла. Пожалуйста, войдите снова.");
+        localStorage.removeItem("token");
+        window.location.reload();
+        return;
+      }
+
+      if (!response.ok) {
+        const text = await response.text();
+        setError(text || "Ошибка загрузки Excel");
+        return;
+      }
+
       onNext(file, shuffle);
+    } catch (e: any) {
+      setError(e.message || "Ошибка загрузки Excel");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -119,20 +158,21 @@ const UploadExcelPage: React.FC<UploadExcelPageProps> = ({ onNext, onBack }) => 
         <button
           onClick={onBack}
           className="px-4 py-2 rounded-lg bg-blue-50 text-blue-700 border border-blue-300 hover:bg-blue-100 transition"
+          disabled={loading}
         >
           Назад
         </button>
 
         <button
           onClick={handleSubmit}
-          disabled={!file}
+          disabled={!file || loading}
           className={`px-4 py-2 rounded-lg transition ${
-            file
+            file && !loading
               ? "bg-blue-600 text-white hover:bg-blue-700"
               : "bg-gray-300 text-gray-600 cursor-not-allowed"
           }`}
         >
-          Распределить темы
+          {loading ? "Загрузка..." : "Распределить темы"}
         </button>
       </div>
     </div>

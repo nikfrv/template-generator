@@ -78,7 +78,7 @@ const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate })
     });
   };
 
-  // Для отображения текста:
+  
   const templateTypeLabel = TemplateType[templateType];
 
   return (
@@ -86,7 +86,6 @@ const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate })
       <h2 className="text-2xl font-bold mb-6 text-blue-700">Общие поля</h2>
       <div className="w-full space-y-4">
 
-        {/* Дата (по частям) */}
         <div>
           <label className="block text-blue-700 mb-1">Дата</label>
           <div className="flex space-x-2">
@@ -178,7 +177,6 @@ const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate })
                 placeholder="Введите консультантов"
               />
             </div>
-            {/* Дата выдачи задания (одной строкой) */}
             <div>
               <label className="block text-blue-700 mb-1">Дата выдачи задания</label>
               <div className="flex space-x-2">
@@ -228,7 +226,6 @@ const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate })
           </>
         )}
 
-        {/* Для курсового проекта и курсовой работы */}
         {(templateType === "COURSE_PROJECT" || templateType === "COURSE_WORK") && (
           <>
             <div>
@@ -276,7 +273,6 @@ const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate })
                 placeholder="Введите консультантов"
               />
             </div>
-            {/* Дата выдачи задания (одной строкой) */}
             <div>
               <label className="block text-blue-700 mb-1">Дата выдачи задания</label>
               <div className="flex space-x-2">

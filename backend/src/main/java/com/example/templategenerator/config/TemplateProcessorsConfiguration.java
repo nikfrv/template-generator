@@ -1,9 +1,9 @@
 package com.example.templategenerator.config;
 
-import com.example.templategenerator.model.TemplateType;
-import com.example.templategenerator.service.CourseProjectTemplateProcessor;
-import com.example.templategenerator.service.DiplomaTemplateProcessor;
-import com.example.templategenerator.service.TemplateProcessor;
+import com.example.templategenerator.model.domain.TemplateType;
+import com.example.templategenerator.service.template.CourseProjectTemplateProcessor;
+import com.example.templategenerator.service.template.DiplomaTemplateProcessor;
+import com.example.templategenerator.service.template.TemplateProcessor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

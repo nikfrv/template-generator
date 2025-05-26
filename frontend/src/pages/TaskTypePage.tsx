@@ -2,15 +2,15 @@ import React, { useState } from "react";
 import { TemplateType } from "../types/TemplateType";
 
 type Props = {
-  onSelect: (type: keyof typeof TemplateType) => void; // <-- ключ!
+  onSelect: (type: keyof typeof TemplateType) => void; 
 };
 
 const TaskTypePage: React.FC<Props> = ({ onSelect }) => {
   const [selected, setSelected] = useState<TemplateType | null>(null);
 
   const handleClick = (key: keyof typeof TemplateType) => {
-    setSelected(TemplateType[key]); // сохраняем значение для подсветки
-    onSelect(key); // передаём ключ наверх
+    setSelected(TemplateType[key]); 
+    onSelect(key); 
   };
 
   return (

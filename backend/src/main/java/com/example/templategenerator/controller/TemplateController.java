@@ -1,10 +1,12 @@
 package com.example.templategenerator.controller;
 
-import com.example.templategenerator.model.AssignmentGenerationRequest;
-import com.example.templategenerator.model.TemplateType;
+import com.example.templategenerator.model.dto.assignment.AssignmentGenerationRequest;
+import com.example.templategenerator.model.domain.TemplateType;
 import com.example.templategenerator.parser.XlsxStudentsAndTopicsParser;
-import com.example.templategenerator.service.AssignmentDocumentGenerator;
-import com.example.templategenerator.service.TemplateProcessorFactory;
+import com.example.templategenerator.service.document.AssignmentDocumentGenerator;
+import com.example.templategenerator.service.db.StudentService;
+import com.example.templategenerator.service.db.TopicService;
+import com.example.templategenerator.service.template.TemplateProcessorFactory;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -21,13 +23,14 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/templates")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "http://localhost:3000")
 public class TemplateController {
 
     private final TemplateProcessorFactory templateProcessorFactory;
     private final AssignmentDocumentGenerator assignmentDocumentGenerator;
     private final XlsxStudentsAndTopicsParser excelParser;
     private final ObjectMapper objectMapper;
+    private final StudentService studentService;
+    private final TopicService topicService;
 
     @PostMapping("/generate")
     public ResponseEntity<byte[]> generateTemplate(
@@ -49,8 +52,7 @@ public class TemplateController {
                 request.getTemplateType(),
                 request.getFileName(),
                 request.isShuffleTopics(),
-                request.getCommonFields()
-        );
+                request.getCommonFields());
         return buildResponse(document, "assignments.docx");
     }
 
@@ -60,11 +62,11 @@ public class TemplateController {
             @RequestParam String fileName,
             @RequestParam(defaultValue = "false") boolean shuffleTopics,
             @RequestPart MultipartFile excelFile,
-            @RequestPart(required = false) String commonFields
-    ) throws IOException {
+            @RequestPart(required = false) String commonFields) throws IOException {
 
-        Map<String, Object> commonFieldsMap = (Map<String, Object>) (Map<?, ?>)
-                objectMapper.readValue(commonFields, new TypeReference<Map<String, Object>>() {});
+        Map<String, Object> commonFieldsMap = (Map<String, Object>) (Map<?, ?>) objectMapper.readValue(commonFields,
+                new TypeReference<Map<String, Object>>() {
+                });
 
         File tempFile = File.createTempFile("excel", ".xlsx");
         excelFile.transferTo(tempFile);
@@ -77,8 +79,7 @@ public class TemplateController {
                 type,
                 fileName,
                 shuffleTopics,
-                commonFieldsMap
-        );
+                commonFieldsMap);
 
         if (!tempFile.delete()) {
             System.err.println("Warning: Failed to delete temp file: " + tempFile.getAbsolutePath());
@@ -94,5 +95,23 @@ public class TemplateController {
                         "application/vnd.openxmlformats-officedocument.wordprocessingml.document"))
                 .body(document);
     }
-}
 
+    @PostMapping(value = "/upload/excel", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<String> uploadExcelAndPersistData(
+            @RequestParam TemplateType type,
+            @RequestPart MultipartFile excelFile) throws IOException {
+        File tempFile = File.createTempFile("excel", ".xlsx");
+        excelFile.transferTo(tempFile);
+
+        var parsed = excelParser.parse(tempFile, type);
+
+        studentService.saveAllIfNotExists(parsed.getStudents());
+        topicService.saveAllIfNotExists(parsed.getTopics());
+
+        if (!tempFile.delete()) {
+            System.err.println("Warning: Failed to delete temp file: " + tempFile.getAbsolutePath());
+        }
+
+        return ResponseEntity.ok("Data loaded to database.");
+    }
+}
