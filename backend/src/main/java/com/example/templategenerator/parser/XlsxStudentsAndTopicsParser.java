@@ -1,6 +1,10 @@
 package com.example.templategenerator.parser;
 
-import com.example.templategenerator.model.*;
+import com.example.templategenerator.model.domain.Student;
+import com.example.templategenerator.model.domain.TemplateType;
+import com.example.templategenerator.model.domain.Topic;
+import com.example.templategenerator.model.dto.assignment.StudentsAndTopicExcelData;
+import com.example.templategenerator.model.templateFields.Item;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -68,9 +72,11 @@ public class XlsxStudentsAndTopicsParser implements StudentsAndTopicsExcelParser
                     String sourceData = getCellValue(row.getCell(1));
                     if (!title.isBlank()) {
                         Topic topic = new Topic();
+                        topic.setType(templateType);
                         topic.setTitle(title);
                         topic.setSourceData(sourceData);
                         topics.add(topic);
+
                     }
                 }
                 case COURSE_PROJECT, COURSE_WORK -> {
@@ -78,6 +84,7 @@ public class XlsxStudentsAndTopicsParser implements StudentsAndTopicsExcelParser
 
                     if (!title.isBlank()) {
                         currentTopic = new Topic();
+                        currentTopic.setType(templateType);
                         currentTopic.setTitle(title);
                         currentTopic.setItems(new ArrayList<>());
                         topics.add(currentTopic);
