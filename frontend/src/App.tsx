@@ -65,7 +65,7 @@ const App: React.FC = () => {
       const token = localStorage.getItem("token");
       if (!token) throw new Error("Требуется авторизация");
 
-      const response = await fetch(`${API_BASE_URL}/templates/generate/from-excel`, {
+      const response = await fetch(`${API_BASE_URL}/templates/generate`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -107,6 +107,40 @@ const App: React.FC = () => {
       } else {
         alert("Ошибка при генерации файла: " + e.message);
       }
+    }
+  };
+
+  const handleSendToEmail = async (fields: any) => {
+    if (!excelFile || !selectedType) return;
+
+    const formData = new FormData();
+    formData.append("type", selectedType);
+    formData.append("fileName", getTemplateFileName(selectedType));
+    formData.append("shuffleTopics", shuffle ? "true" : "false");
+    formData.append("excelFile", excelFile);
+    formData.append("commonFields", JSON.stringify(fields));
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Требуется авторизация");
+
+      const response = await fetch(`${API_BASE_URL}/templates/send-to-email`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        alert("Ошибка отправки на почту: " + text);
+        return;
+      }
+      const data = await response.json();
+      alert(data.message); // <-- теперь будет красивое уведомление
+    } catch (e: any) {
+      alert("Ошибка отправки на почту: " + e.message);
     }
   };
 
@@ -201,6 +235,7 @@ const App: React.FC = () => {
                 templateType={selectedType}
                 onBack={() => setStep("upload")}
                 onGenerate={handleGenerate}
+                onSendToEmail={handleSendToEmail}
               />
             )}
           </>

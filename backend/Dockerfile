@@ -14,6 +14,7 @@ COPY . .
 
 RUN ./gradlew bootJar --no-daemon
 
+
 FROM openjdk:21-jdk-slim
 
 WORKDIR /app

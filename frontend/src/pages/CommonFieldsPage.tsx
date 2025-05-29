@@ -18,6 +18,7 @@ interface Props {
   templateType: keyof typeof TemplateType;
   onBack: () => void;
   onGenerate: (fields: CommonFields) => void;
+  onSendToEmail: (fields: CommonFields) => void;
 }
 
 const monthsGenitive = [
@@ -34,7 +35,7 @@ const getTodayGenitive = () => {
   };
 };
 
-const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate }) => {
+const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate, onSendToEmail }) => {
   const todayGenitive = getTodayGenitive();
 
   const [date, setDate] = useState({
@@ -55,6 +56,7 @@ const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate })
     consultants: "",
     projectStage: "",
   });
+  const [sending, setSending] = useState(false);
 
   const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>, setDateFn: any) => {
     const { name, value } = e.target;
@@ -67,15 +69,25 @@ const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate })
   };
 
   const handleSubmit = () => {
-    const assignmentDateStr = `${assignmentDate.day} ${assignmentDate.month} ${assignmentDate.year} `;
-
     onGenerate({
       ...fields,
       day: date.day,
       month: date.month,
       year: date.year,
-      assignmentDate: assignmentDateStr,
+      assignmentDate: `${assignmentDate.day} ${assignmentDate.month} ${assignmentDate.year}`,
     });
+  };
+
+  const handleSend = async () => {
+    setSending(true);
+    await onSendToEmail({
+      ...fields,
+      day: date.day,
+      month: date.month,
+      year: date.year,
+      assignmentDate: `${assignmentDate.day} ${assignmentDate.month} ${assignmentDate.year}`,
+    });
+    setSending(false);
   };
 
   
@@ -321,6 +333,7 @@ const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate })
             </div>
           </>
         )}
+
       </div>
 
       <div className="flex space-x-4 mt-6">
@@ -334,7 +347,14 @@ const CommonFieldsPage: React.FC<Props> = ({ templateType, onBack, onGenerate })
           onClick={handleSubmit}
           className="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 transition"
         >
-          Сгенерировать задания
+          Скачать
+        </button>
+        <button
+          onClick={handleSend}
+          className="px-4 py-2 rounded-lg bg-green-600 text-white hover:bg-green-700 transition"
+          disabled={sending}
+        >
+          {sending ? "Отправка..." : "Отправить на почту"}
         </button>
       </div>
     </div>

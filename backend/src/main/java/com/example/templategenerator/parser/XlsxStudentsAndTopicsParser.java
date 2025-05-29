@@ -59,7 +59,7 @@ public class XlsxStudentsAndTopicsParser implements StudentsAndTopicsExcelParser
     private List<Topic> parseTopics(Sheet sheet, TemplateType templateType) {
         List<Topic> topics = new ArrayList<>();
         Iterator<Row> rowIterator = sheet.iterator();
-        if (rowIterator.hasNext()) rowIterator.next(); // Пропустить заголовок
+        if (rowIterator.hasNext()) rowIterator.next();
 
         Topic currentTopic = null;
 
@@ -121,4 +121,3 @@ public class XlsxStudentsAndTopicsParser implements StudentsAndTopicsExcelParser
         };
     }
 }
-

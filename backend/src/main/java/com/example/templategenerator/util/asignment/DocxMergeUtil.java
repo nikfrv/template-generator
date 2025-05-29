@@ -22,15 +22,12 @@ public class DocxMergeUtil {
             for (byte[] docBytes : documents) {
                 try (XWPFDocument doc = new XWPFDocument(new ByteArrayInputStream(docBytes))) {
                     if (first) {
-                        // Первый документ — используем как основу
                         CTBody body = finalDoc.getDocument().getBody();
                         body.set(doc.getDocument().getBody());
                         first = false;
                     } else {
-                        // Вставляем разрыв страницы ПЕРЕД вставкой следующего задания
                         insertPageBreak(finalDoc);
 
-                        // Добавляем содержимое документа
                         appendBodyElements(finalDoc, doc);
                     }
                 }
@@ -42,14 +39,12 @@ public class DocxMergeUtil {
     }
 
     private static void appendBodyElements(XWPFDocument target, XWPFDocument source) {
-        // Копируем стили
         XWPFStyles sourceStyles = source.getStyles();
         XWPFStyles targetStyles = target.createStyles();
         if (sourceStyles != null && targetStyles != null) {
             targetStyles.setStyles(sourceStyles.getCtStyles());
         }
 
-        // Вставка элементов
         for (IBodyElement elem : source.getBodyElements()) {
             if (elem instanceof XWPFParagraph p) {
                 XWPFParagraph newPar = target.createParagraph();
@@ -68,4 +63,3 @@ public class DocxMergeUtil {
         br.setType(STBrType.PAGE);
     }
 }
-
